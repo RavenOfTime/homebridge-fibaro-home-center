@@ -70,6 +70,9 @@ export class FibaroHC implements DynamicPlatformPlugin {
     if (this.config.addRoomNameToDeviceName === undefined) {
       this.config.addRoomNameToDeviceName = 'disabled';
     }
+    if (this.config.accptable == undefined) {
+      this.config.accptable = [];
+    }
 
     this.fibaroClient = new FibaroClient(this.config.url, this.config.host, this.config.username, this.config.password, this.log);
     if (this.fibaroClient.status === false) {
@@ -134,7 +137,8 @@ export class FibaroHC implements DynamicPlatformPlugin {
   LoadAccessories(devices, rooms) {
     this.log.info('Loading accessories');
     devices.map((s, i, a) => {
-      if (s.visible === true && !s.name.startsWith('_')) {
+      const checkRoleExistence = roleParam => this.config.accptable?.some((value) => value == roleParam)
+      if (s.visible === true && !s.name.startsWith('_') && checkRoleExistence(s.id)) {
         const siblings = this.findSiblingDevices(s, a);
         if (rooms !== null) {
           // patch device name
@@ -208,7 +212,7 @@ export class FibaroHC implements DynamicPlatformPlugin {
       // Create accessory handler
       const fa = new FibaroAccessory(this, accessory, device, sibling);
       if (fa.isValid) {
-      // link the accessory to the platform
+        // link the accessory to the platform
         this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
 
         this.accessories.push(accessory);
@@ -259,7 +263,7 @@ export class FibaroHC implements DynamicPlatformPlugin {
 
   isOldApi() {
     return this.info && this.info.serialNumber &&
-        (this.info.serialNumber.indexOf('HC2-') === 0 || this.info.serialNumber.indexOf('HLC-') === 0);
+      (this.info.serialNumber.indexOf('HC2-') === 0 || this.info.serialNumber.indexOf('HLC-') === 0);
   }
 
 }
